@@ -289,3 +289,13 @@ CI 通过只能说明自动检查通过，不能替代人工语义收敛，也�
 - 自动 tag 默认不触发，只有 commit title 包含 `#patch`、`#minor`、`#major` 才会触发版本号更新。
 - 手动打 tag 必须使用 annotated tag。
 - 用户可见变更优先通过 PR 合入，并补齐 label 与验证说明。
+
+## Cursor Cloud specific instructions
+
+以下只补充 Cloud Agent 里不容易从 README 看出来的运行约定。依赖安装与服务拉起由环境的 `install` / `start` 完成，日常改代码不必重装。
+
+- Python 虚拟环境在 `$HOME/.dsa-venv`。`/usr/local/bin/python` 和 `python3` 是包装脚本，会 exec 该环境里的解释器。不要把虚拟环境的 `python` 再符号链接到其他路径，否则解释器找不到 `pyvenv.cfg`，`import fastapi` 会失败。`pip`、`pytest`、`flake8`、`uvicorn` 是指向虚拟环境入口脚本的符号链接。
+- 系统包包含 `wkhtmltopdf`，供 `imgkit` 把 Markdown 报告转成图片。
+- 仓库根目录没有 `.env` 时，从 `.env.example` 复制。`ADMIN_AUTH_ENABLED` 默认为 false。模型与通知密钥可以留空，Web/API 和行情拉取仍可运行；完整 AI 分析至少需要配置一个模型密钥。
+- 启动后的服务：API `http://127.0.0.1:8000`（`WEBUI_AUTO_BUILD=false`，避免每次启动编译前端），Vite `http://127.0.0.1:5173`（`/api` 代理到 8000）。tmux 会话名为 `dsa-api` 与 `dsa-web`。要让 8000 端口直接托管页面，先在 `apps/dsa-web` 执行 `npm run build`，产物写入仓库根目录 `static/`。
+- 验证命令：`./scripts/ci_gate.sh`；`cd apps/dsa-web && npm run lint && npm run build`；`cd apps/dsa-desktop && npm test`。桌面依赖已安装，本环境不启动 Electron。桌面安装包仍按 Windows/macOS 打包流程处理。
