@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CopyButton } from "@/components/copy-button";
 import { FilterBar } from "@/components/filter-bar";
-import { FrameMark } from "@/components/frame-mark";
+import { PromptMedia } from "@/components/prompt-media";
 import { LikeButton } from "@/components/like-button";
 import { PromptCard } from "@/components/prompt-card";
 import { headingFor, readFilters } from "@/lib/filters";
@@ -74,9 +74,28 @@ function Lead({ prompt }: { prompt: Prompt }) {
           </a>
         </div>
       </div>
-      <a href={`/prompts/${prompt.id}`} aria-label={prompt.title}>
-        <FrameMark id={prompt.id} aspect={prompt.aspect} size="lead" />
-      </a>
+      {prompt.mediaUrl.endsWith(".mp4") ? (
+        <PromptMedia
+          id={prompt.id}
+          title={prompt.title}
+          aspect={prompt.aspect}
+          coverUrl={prompt.coverUrl}
+          mediaUrl={prompt.mediaUrl}
+          size="lead"
+          playable
+        />
+      ) : (
+        <a href={`/prompts/${prompt.id}`} aria-label={prompt.title}>
+          <PromptMedia
+            id={prompt.id}
+            title={prompt.title}
+            aspect={prompt.aspect}
+            coverUrl={prompt.coverUrl}
+            mediaUrl={prompt.mediaUrl}
+            size="lead"
+          />
+        </a>
+      )}
     </section>
   );
 }

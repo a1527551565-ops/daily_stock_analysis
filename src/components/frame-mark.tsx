@@ -30,7 +30,7 @@ export function FrameMark({
   const copperX = 18 + (seed % 100);
 
   return (
-    <div className={size === "lead" ? "frame-stage lead" : "frame-stage"}>
+    <div className={size === "lead" ? "frame-stage stage-lead" : "frame-stage"}>
       <svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <rect width="160" height="100" fill="#221f1b" />
         {blocks.map((block) => (

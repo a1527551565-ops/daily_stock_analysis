@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
 import { DeleteButton } from "@/components/delete-button";
-import { FrameMark } from "@/components/frame-mark";
+import { PromptMedia } from "@/components/prompt-media";
 import { LikeButton } from "@/components/like-button";
 import { PromptCard } from "@/components/prompt-card";
 import { formatDate, mediumLabel } from "@/lib/format";
@@ -32,9 +32,18 @@ export default async function PromptPage({ params }: { params: Promise<{ id: str
     <>
       <article className="detail">
         <div>
-          <FrameMark id={prompt.id} aspect={prompt.aspect} size="lead" />
+          <PromptMedia
+            id={prompt.id}
+            title={prompt.title}
+            aspect={prompt.aspect}
+            coverUrl={prompt.coverUrl}
+            mediaUrl={prompt.mediaUrl}
+            size="lead"
+            playable
+          />
           <p className="byline">
             {prompt.authorName} · {formatDate(prompt.createdAt)}
+            {prompt.coverUrl ? " · 示例成片" : ""}
           </p>
         </div>
         <div>

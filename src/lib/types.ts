@@ -12,6 +12,8 @@ export type Prompt = {
   params: string;
   style: string;
   aspect: string;
+  coverUrl: string;
+  mediaUrl: string;
   tags: string[];
   authorName: string;
   likes: number;

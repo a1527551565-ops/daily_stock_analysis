@@ -46,6 +46,10 @@ assert(valid.value.tags.join() === "灯,静物", "tags should dedupe");
 const listed = await listPrompts({ medium: "", model: "", style: "", q: "", sort: "new" }, viewer);
 assert(listed.length >= 16, `expected seeds, got ${listed.length}`);
 assert(listed.some((item) => item.title === "雨夜站台"), "missing seed title");
+const rain = listed.find((item) => item.id === "seed-rain-platform");
+const coast = listed.find((item) => item.id === "seed-coast-longtake");
+assert(rain?.coverUrl === "/media/rain-platform.jpg", "image cover missing");
+assert(coast?.mediaUrl === "/media/coast-longtake.mp4", "video file missing");
 
 const searched = await listPrompts({ medium: "video", model: "Kling", style: "", q: "海岸", sort: "likes" }, viewer);
 assert(searched.length === 1 && searched[0]?.title === "海岸前推", "filter leaked");

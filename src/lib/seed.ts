@@ -1,5 +1,27 @@
 import type { Medium } from "./types";
 
+const MEDIA_PATH = /^\/media\/[a-z0-9.-]+$/;
+
+export function seedMedia(id: string): { coverUrl: string; mediaUrl: string } {
+  const file = id.replace(/^seed-/, "");
+  const video = new Set([
+    "coast-longtake",
+    "glass-orbit",
+    "dough-hands",
+    "dusk-bike",
+    "umbrella",
+    "ink-drop",
+    "paper-plane",
+    "train-window",
+  ]);
+  const coverUrl = `/media/${file}.jpg`;
+  const mediaUrl = video.has(file) ? `/media/${file}.mp4` : "";
+  if (!MEDIA_PATH.test(coverUrl) || (mediaUrl !== "" && !MEDIA_PATH.test(mediaUrl))) {
+    return { coverUrl: "", mediaUrl: "" };
+  }
+  return { coverUrl, mediaUrl };
+}
+
 export type SeedPrompt = {
   id: string;
   title: string;

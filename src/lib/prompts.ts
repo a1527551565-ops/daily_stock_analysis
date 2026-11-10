@@ -1,5 +1,5 @@
 import { sql } from "./db";
-import { SEEDS } from "./seed";
+import { SEEDS, seedMedia } from "./seed";
 import { isPromptId } from "./validate";
 import type { Channel, Prompt, PromptFilters, PromptInput, Viewer } from "./types";
 
@@ -15,6 +15,8 @@ type PromptRow = {
   style: string;
   aspect: string;
   tags: string;
+  cover_url: string;
+  media_url: string;
   author_name: string;
   likes: number | string;
   featured: boolean | string | number;
@@ -26,7 +28,7 @@ type PromptRow = {
 const SELECT = `
   select
     p.id, p.title, p.summary, p.medium, p.model, p.prompt, p.negative_prompt,
-    p.params, p.style, p.aspect, p.tags, p.author_name, p.likes, p.featured, p.created_at,
+    p.params, p.style, p.aspect, p.tags, p.cover_url, p.media_url, p.author_name, p.likes, p.featured, p.created_at,
     (p.author_sub = $1) as mine,
     exists (
       select 1 from prompt_likes l
@@ -48,39 +50,61 @@ function ready(): Promise<void> {
 
 async function seedIfNeeded(): Promise<void> {
   const existing = await sql<{ value: string }>("select value from app_meta where key = $1", ["seeded"]);
-  if (existing.length > 0) return;
-  for (const channel of ["production", "preview"] as const) {
-    for (const item of SEEDS) {
-      await sql(
-        `insert into prompts (
-          id, channel, title, summary, medium, model, prompt, negative_prompt, params, style, aspect, tags,
-          author_sub, author_name, likes, featured, created_at
-        ) values (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'seed', '帧词编辑部', $13, $14, $15
-        ) on conflict (id, channel) do nothing`,
-        [
-          item.id,
-          channel,
-          item.title,
-          item.summary,
-          item.medium,
-          item.model,
-          item.prompt,
-          item.negativePrompt,
-          item.params,
-          item.style,
-          item.aspect,
-          item.tags,
-          item.likes,
-          item.featured,
-          item.createdAt,
-        ],
-      );
+  if (existing.length === 0) {
+    for (const channel of ["production", "preview"] as const) {
+      for (const item of SEEDS) {
+        const media = seedMedia(item.id);
+        await sql(
+          `insert into prompts (
+            id, channel, title, summary, medium, model, prompt, negative_prompt, params, style, aspect, tags,
+            author_sub, author_name, likes, featured, created_at, cover_url, media_url
+          ) values (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'seed', '帧词编辑部', $13, $14, $15, $16, $17
+          ) on conflict (id, channel) do nothing`,
+          [
+            item.id,
+            channel,
+            item.title,
+            item.summary,
+            item.medium,
+            item.model,
+            item.prompt,
+            item.negativePrompt,
+            item.params,
+            item.style,
+            item.aspect,
+            item.tags,
+            item.likes,
+            item.featured,
+            item.createdAt,
+            media.coverUrl,
+            media.mediaUrl,
+          ],
+        );
+      }
     }
+    await sql(
+      "insert into app_meta (key, value) values ($1, $2) on conflict (key) do nothing",
+      ["seeded", "1"],
+    );
+  }
+  await attachSeedMedia();
+}
+
+async function attachSeedMedia(): Promise<void> {
+  const done = await sql<{ value: string }>("select value from app_meta where key = $1", ["media_v1"]);
+  if (done.length > 0) return;
+  for (const item of SEEDS) {
+    const media = seedMedia(item.id);
+    await sql("update prompts set cover_url = $1, media_url = $2 where id = $3", [
+      media.coverUrl,
+      media.mediaUrl,
+      item.id,
+    ]);
   }
   await sql(
     "insert into app_meta (key, value) values ($1, $2) on conflict (key) do nothing",
-    ["seeded", "1"],
+    ["media_v1", "1"],
   );
 }
 
@@ -247,6 +271,8 @@ function mapPrompt(row: PromptRow): Prompt {
     params: row.params,
     style: row.style,
     aspect: row.aspect,
+    coverUrl: row.cover_url ?? "",
+    mediaUrl: row.media_url ?? "",
     tags: row.tags ? row.tags.split(",").filter(Boolean) : [],
     authorName: row.author_name,
     likes: Number(row.likes),
